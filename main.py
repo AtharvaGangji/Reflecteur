@@ -27,7 +27,7 @@ coin_rect = None
 WIDTH = 1000
 HEIGHT = 600
 
-LEVEL = 4
+LEVEL = 1
 LIVES = 3
 
 COIN = int(0)
@@ -50,10 +50,13 @@ blocks_made = False
 spike_pos_x = 250
 spike_pos_y = 50
 
+instruction = 0
+
 spike_rect = None
 spike_rect2 = None
 spike_rect3 = None
 spike_rect4 = None
+
 
 # ------------------------------------------------------------ main game function
 def play():
@@ -64,11 +67,12 @@ def play():
     global running, real_paddle_x, real_paddle_y, move_speed, key_down, direction, LEVEL, coin_pos_y  # global variables
     global fake_paddle_x, fake_paddle_y, paddle_size, coin_pos_x, real_paddle_rect, coin_rect, COIN  # global variables
     global last_pos_x, last_pos_y, door_size, blocks_made, spike_pos_x, spike_pos_y, spike_rect  # global variables
-    global spike_rect2, spike_rect3, spike_rect4  # global variables
+    global spike_rect2, spike_rect3, spike_rect4, instruction  # global variables
 
     window = pygame.display.set_mode((WIDTH, HEIGHT))  # initialise window
 
     game_font = pygame.font.Font("assets/Anonymous_Pro.ttf", 35)
+    instruction_font = pygame.font.Font("assets/Anonymous_Pro.ttf", 21)
 
     player_right = pygame.image.load("assets/player_left.gif")
     player_right = pygame.transform.scale(player_right, (paddle_size, paddle_size))
@@ -158,8 +162,14 @@ def play():
                 last_pos_y = coin_pos_y
     coin_random()
 
+    def coin_level_4():
+        if spike_rect.colliderect(coin_rect) or spike_rect2.colliderect(coin_rect) or spike_rect3.colliderect(coin_rect) or \
+                spike_rect4.colliderect(coin_rect):
+            coin_random()
+            coin()
+
     def coin():
-        global coin_pos_x, coin_rect, coin_pos_y
+        global coin_pos_x, coin_rect, coin_pos_y, spike_rect
 
         coin_rect = coin_image.get_rect(center=(coin_pos_x, coin_pos_y))
         window.blit(coin_image, coin_rect)
@@ -181,7 +191,7 @@ def play():
         if LEVEL == 2:
             COIN = 4
         if LEVEL == 3:
-            COIN = 8
+            COIN = 6
         if LEVEL == 4:
             COIN = 8
         coin_random()
@@ -192,12 +202,18 @@ def play():
     def level_display():
         global LEVEL
         level_surface = game_font.render(f"Level: {int(LEVEL)}", True, (255, 255, 255))
-        level_rect = level_surface.get_rect(center=(100, 30))
+        level_rect = level_surface.get_rect(center = (100, 30))
         window.blit(level_surface, level_rect)
 
         level_surface = game_font.render(f"Lives: {int(LIVES)}", True, (255, 255, 255))
-        level_rect = level_surface.get_rect(center=(300, 30))
+        level_rect = level_surface.get_rect(center = (300, 30))
         window.blit(level_surface, level_rect)
+
+    def tutorial_text():
+        if instruction < 6:
+            tutorial_surface = instruction_font.render("Watch the itch page to know how to play", True, (255, 255, 255))
+            tutorial_rect = tutorial_surface.get_rect(center = (520, 540))
+            window.blit(tutorial_surface, tutorial_rect)
 
     def level_complete():
         global LEVEL
@@ -241,7 +257,11 @@ def play():
             door_open_rect2 = pygame.Rect(800, 10, door_size, door_size)  # (x, y, width, height)
             window.blit(door_open, door_open_rect2)
         elif x == 4:
-            pass
+            door_open_rect = pygame.Rect(10, 0, door_size, door_size)  # (x, y, width, height)
+            window.blit(door_open, door_open_rect)
+
+            door_open_rect2 = pygame.Rect(WIDTH - 100, HEIGHT - 100, door_size, door_size)  # (x, y, width, height)
+            window.blit(door_open, door_open_rect2)
         elif x == 5:
             pass
 
@@ -441,15 +461,19 @@ def play():
                 if event.key == pygame.K_UP:  # move the real paddle up
                     direction = "up"
                     key_down = False
+                    instruction += 1
                 if event.key == pygame.K_DOWN:  # move the real paddle up
                     direction = "down"
                     key_down = False
+                    instruction += 1
                 if event.key == pygame.K_RIGHT:  # move the real paddle up
                     direction = "right"
                     key_down = False
+                    instruction += 1
                 if event.key == pygame.K_LEFT:  # move the real paddle up
                     direction = "left"
                     key_down = False
+                    instruction += 1
 
         if key_down:
             move_real_paddle()  # fall a function
@@ -465,12 +489,15 @@ def play():
 
         fake_paddle()
 
+        if LEVEL == 1:
+            tutorial_text()
+
         if COIN > 0:
             coin()
 
         if COIN <= 0:
             open_doors(LEVEL)
-            if not LEVEL >= 4:
+            if not LEVEL >= 6:
                 inside_door()
 
         if LEVEL == 2:  # check if level 2
@@ -486,6 +513,7 @@ def play():
         if LEVEL == 4:  # check if level 4
             make_spike_level_4()
             spike_collision_level_4()
+            coin_level_4()
 
         coin_collect()
 
@@ -497,4 +525,3 @@ def play():
 # ------------------------------------------------------------ needed if statement
 if __name__ == "__main__":
     play()
-   
